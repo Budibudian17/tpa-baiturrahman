@@ -49,45 +49,62 @@ export async function GET(request: NextRequest) {
     // Also fetch memorizations for the user (teacher evaluations)
     if (userId) {
       console.log('Fetching memorizations for userId:', userId)
-      const memQ = query(collection(db, 'memorizations'), where('userId', '==', userId), orderBy('createdAt', 'desc'))
-      const memSnapshot = await getDocs(memQ)
-      console.log('Memorizations query executed, docs count:', memSnapshot.docs.length)
+      try {
+        const memQ = query(collection(db, 'memorizations'), where('userId', '==', userId), orderBy('createdAt', 'desc'))
+        const memSnapshot = await getDocs(memQ)
+        console.log('Memorizations query executed, docs count:', memSnapshot.docs.length)
 
-      for (const memDoc of memSnapshot.docs) {
-        const memData = memDoc.data()
-        console.log('Processing memorization:', memDoc.id, 'userId:', memData.userId)
+        // Get user data for memorizations
+        const userDoc = await getDoc(doc(db, 'users', userId))
+        const userData = userDoc.data() as any
+        console.log('User data for memorizations:', userData ? userData.name : 'not found')
 
-        // Format memorization as a report
-        let description = ''
-        if (memData.type === 'QURAN') {
-          description = `Hafal Surah ${memData.surahName} (Ayat ${memData.verse})`
-        } else if (memData.type === 'ASMAUL_HUSNA') {
-          description = `Hafal ${memData.asmaulHusnaCount} Asmaul Husna`
-        }
+        for (const memDoc of memSnapshot.docs) {
+          const memData = memDoc.data()
+          console.log('Processing memorization:', memDoc.id, 'userId:', memData.userId, 'type:', memData.type, 'stars:', memData.stars)
 
-        reports.push({
-          id: memDoc.id,
-          type: 'HAFALAN',
-          userId: memData.userId,
-          stars: memData.stars,
-          status: 'APPROVED', // Teacher evaluations are automatically approved
-          createdAt: memData.createdAt,
-          description,
-          surahName: memData.surahName,
-          startVerse: memData.verse,
-          endVerse: memData.verse,
-          isFromTeacher: true, // Flag to indicate this is from teacher evaluation
-          user: {
-            id: memData.userId,
-            name: '', // Will be filled from the first report's user data
-            photoUrl: null
+          // Format memorization as a report
+          let description = ''
+          if (memData.type === 'QURAN') {
+            description = `Hafal Surah ${memData.surahName} (Ayat ${memData.verse})`
+          } else if (memData.type === 'ASMAUL_HUSNA') {
+            description = `Hafal ${memData.asmaulHusnaCount} Asmaul Husna`
           }
-        })
+
+          const memReport = {
+            id: memDoc.id,
+            type: 'HAFALAN',
+            userId: memData.userId,
+            stars: memData.stars,
+            status: 'APPROVED', // Teacher evaluations are automatically approved
+            createdAt: memData.createdAt,
+            description,
+            surahName: memData.surahName,
+            startVerse: memData.verse,
+            endVerse: memData.verse,
+            isFromTeacher: true, // Flag to indicate this is from teacher evaluation
+            user: userData ? {
+              id: memData.userId,
+              name: userData.name,
+              photoUrl: userData.photoUrl || null
+            } : null
+          }
+          console.log('Adding memorization report:', memReport)
+          reports.push(memReport)
+        }
+      } catch (memError) {
+        console.error('Error fetching memorizations:', memError)
+        console.error('Error details:', JSON.stringify(memError, null, 2))
+        // Don't fail the whole request if memorizations fail
       }
     }
 
     // Sort all reports by createdAt
-    reports.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    reports.sort((a: any, b: any) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return bTime - aTime
+    })
 
     console.log('Returning reports:', reports.length)
     return NextResponse.json({ reports })

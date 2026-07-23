@@ -37,6 +37,7 @@ interface Report {
   startVerse?: string
   endVerse?: string
   description?: string
+  isFromTeacher?: boolean
 }
 
 export default function DashboardPage() {
@@ -56,10 +57,12 @@ export default function DashboardPage() {
         }
         const userData = await res.json()
         setUser(userData)
-        fetchReports(userData.id)
+        await fetchReports(userData.id)
       } catch (error) {
         console.error('Failed to fetch user data:', error)
         router.push('/login')
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -76,25 +79,6 @@ export default function DashboardPage() {
       setReports(data.reports || [])
     } catch (error) {
       console.error('Failed to fetch reports:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const refreshUserData = async () => {
-    try {
-      const session = localStorage.getItem('session')
-      if (session) {
-        const userData = JSON.parse(session)
-        const res = await fetch(`/api/users/${userData.id}`)
-        if (res.ok) {
-          const updatedUser = await res.json()
-          setUser(updatedUser)
-          localStorage.setItem('session', JSON.stringify(updatedUser))
-        }
-      }
-    } catch (error) {
-      console.error('Failed to refresh user data:', error)
     }
   }
 
@@ -292,7 +276,7 @@ function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, re
         {reports.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Belum ada laporan</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
             {pendingReports.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-yellow-600 flex items-center gap-2">
@@ -383,7 +367,7 @@ function TeacherDashboard() {
 
 function ReportCard({ report }: { report: Report }) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  
+
   const typeLabels: Record<string, string> = {
     SHALAT: 'Shalat',
     AMALAN_BAIK: 'Amalan Baik',
@@ -403,6 +387,8 @@ function ReportCard({ report }: { report: Report }) {
     REJECTED: 'Ditolak'
   }
 
+  console.log('ReportCard rendering:', report)
+
   return (
     <>
       <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg">
@@ -420,7 +406,7 @@ function ReportCard({ report }: { report: Report }) {
             <span className="font-bold text-green-600">+{report.stars}</span>
           </div>
         </div>
-        
+
         {/* Report Details */}
         <div className="text-xs text-gray-600 space-y-1">
           {report.location && <p>Lokasi: {report.location}</p>}
