@@ -130,7 +130,7 @@ export default function ReportsQueue() {
       {reports.length === 0 ? (
         <p className="text-gray-500 text-center py-8">Tidak ada laporan yang menunggu</p>
       ) : (
-        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+        <div className="space-y-4">
           {reports.map(report => (
             <div key={report.id} className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">

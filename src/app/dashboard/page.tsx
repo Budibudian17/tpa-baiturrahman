@@ -276,7 +276,7 @@ function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, re
         {reports.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Belum ada laporan</p>
         ) : (
-          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+          <div className="space-y-3">
             {pendingReports.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-yellow-600 flex items-center gap-2">
