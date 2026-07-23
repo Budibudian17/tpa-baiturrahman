@@ -7,6 +7,7 @@ interface Student {
   id: string
   name: string
   stars: number
+  photoUrl?: string
 }
 
 export default function Leaderboard() {
@@ -88,6 +89,17 @@ export default function Leaderboard() {
                 <div className="flex items-center justify-center w-10 h-10">
                   {getRankIcon(index + 1)}
                 </div>
+                {student.photoUrl ? (
+                  <img
+                    src={student.photoUrl}
+                    alt={student.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {student.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <p className="font-semibold text-gray-800">{student.name}</p>
                   <p className="text-sm text-gray-500">Peringkat #{index + 1}</p>

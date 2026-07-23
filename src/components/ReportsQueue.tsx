@@ -19,6 +19,7 @@ interface Report {
   userId: string
   user: {
     name: string
+    photoUrl?: string
   }
   createdAt: string
 }
@@ -123,9 +124,22 @@ export default function ReportsQueue() {
           {reports.map(report => (
             <div key={report.id} className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="font-semibold text-gray-800">{report.user.name}</p>
-                  <p className="text-sm text-gray-600">{typeLabels[report.type] || report.type}</p>
+                <div className="flex items-center gap-3">
+                  {report.user.photoUrl ? (
+                    <img
+                      src={report.user.photoUrl}
+                      alt={report.user.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {report.user.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-gray-800">{report.user.name}</p>
+                    <p className="text-sm text-gray-600">{typeLabels[report.type] || report.type}</p>
+                  </div>
                 </div>
                 <span className="text-sm text-gray-500">
                   {new Date(report.createdAt).toLocaleDateString('id-ID')}

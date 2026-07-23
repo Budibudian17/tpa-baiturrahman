@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         username: userData.username,
         role: userData.role,
         stars: userData.stars,
+        photoUrl: userData.photoUrl || null,
         createdAt: userData.createdAt
       })
     }
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, name } = body
+    const { userId, name, photoUrl } = body
 
     if (!userId || !name) {
       return NextResponse.json(
@@ -88,43 +89,27 @@ export async function PATCH(request: NextRequest) {
     }
 
     const userData = userDoc.data() as any
-    const nameChangeCount = userData.nameChangeCount || 0
-    const lastNameChangeAt = userData.lastNameChangeAt
 
-    // Check if user has already changed name once
-    if (nameChangeCount >= 1) {
-      // Check if 2 weeks have passed since last change
-      if (lastNameChangeAt) {
-        const lastChangeDate = new Date(lastNameChangeAt)
-        const now = new Date()
-        const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000
-        const timeSinceLastChange = now.getTime() - lastChangeDate.getTime()
-
-        if (timeSinceLastChange < twoWeeksInMs) {
-          const daysRemaining = Math.ceil((twoWeeksInMs - timeSinceLastChange) / (24 * 60 * 60 * 1000))
-          return NextResponse.json(
-            { error: `Anda harus menunggu ${daysRemaining} hari lagi sebelum bisa mengubah nama lagi` },
-            { status: 400 }
-          )
-        }
-      }
-    }
-
-    // Update user name
+    // Update user name and photo (removed cooldown for testing)
     await updateDoc(userRef, {
       name,
-      nameChangeCount: nameChangeCount + 1,
-      lastNameChangeAt: new Date().toISOString()
+      photoUrl: photoUrl || userData.photoUrl
     })
 
-    // Update session
-    const updatedUser = { ...user, name }
-    document.cookie = `session=${JSON.stringify(updatedUser)}; path=/; SameSite=Lax`
-
-    return NextResponse.json(
-      { message: 'Name updated successfully', name },
+    // Update session using response cookie
+    const updatedUser = { ...user, name, photoUrl: photoUrl || userData.photoUrl }
+    const response = NextResponse.json(
+      { message: 'Profile updated successfully', name, photoUrl: photoUrl || userData.photoUrl },
       { status: 200 }
     )
+    response.cookies.set('session', JSON.stringify(updatedUser), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    })
+
+    return response
   } catch (error) {
     console.error('Failed to update user:', error)
     return NextResponse.json(

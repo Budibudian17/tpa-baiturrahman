@@ -5,7 +5,7 @@ import { auth, db } from '@/lib/firebase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, username, password, role } = await request.json()
+    const { name, email, username, password, role, teacherCode, photoUrl } = await request.json()
 
     if (!name || !email || !username || !password || !role) {
       return NextResponse.json(
@@ -19,6 +19,25 @@ export async function POST(request: NextRequest) {
         { error: 'Password must be at least 6 characters' },
         { status: 400 }
       )
+    }
+
+    // Teacher code validation for teachers
+    if (role === 'TEACHER') {
+      if (!teacherCode) {
+        return NextResponse.json(
+          { error: 'Teachers must provide teacher code' },
+          { status: 400 }
+        )
+      }
+
+      // Validate teacher code against environment variable
+      const validTeacherCode = process.env.TEACHER_SECRET_CODE || 'guruTpa_1998'
+      if (teacherCode !== validTeacherCode) {
+        return NextResponse.json(
+          { error: 'Invalid teacher code' },
+          { status: 401 }
+        )
+      }
     }
 
     // Check if username already exists in Firestore
@@ -41,6 +60,7 @@ export async function POST(request: NextRequest) {
       username,
       role,
       stars: 0,
+      photoUrl: photoUrl || null,
       createdAt: new Date().toISOString()
     })
 
@@ -55,7 +75,8 @@ export async function POST(request: NextRequest) {
       email,
       username,
       role,
-      stars: 0
+      stars: 0,
+      photoUrl: photoUrl || null
     }
 
     return NextResponse.json(

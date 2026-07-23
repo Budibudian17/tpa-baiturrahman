@@ -9,6 +9,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [googleUser, setGoogleUser] = useState<any>(null)
   const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'TEACHER' | null>(null)
+  const [teacherCode, setTeacherCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,6 +29,12 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     if (!selectedRole || !googleUser) return
 
+    // Teacher code validation for teachers
+    if (selectedRole === 'TEACHER' && !teacherCode) {
+      setError('Guru harus memasukkan kode guru')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -40,7 +47,8 @@ export default function OnboardingPage() {
           displayName: googleUser.displayName,
           email: googleUser.email,
           photoURL: googleUser.photoURL,
-          role: selectedRole
+          role: selectedRole,
+          teacherCode: selectedRole === 'TEACHER' ? teacherCode : null
         })
       })
 
@@ -151,6 +159,27 @@ export default function OnboardingPage() {
               <p className="text-sm text-gray-500 mt-1">Untuk menyetujui laporan siswa</p>
             </button>
 
+            {/* Teacher Code for Teachers */}
+            {selectedRole === 'TEACHER' && (
+              <div className="mt-4">
+                <label htmlFor="teacherCode" className="block text-sm font-medium text-gray-700 mb-2">
+                  Kode Guru <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="teacherCode"
+                  type="password"
+                  value={teacherCode}
+                  onChange={(e) => setTeacherCode(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-gray-800 placeholder-gray-400"
+                  placeholder="Masukkan kode guru"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Kode khusus untuk mendaftar sebagai guru
+                </p>
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
                 {error}
@@ -159,7 +188,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={handleComplete}
-              disabled={!selectedRole || loading}
+              disabled={!selectedRole || loading || (selectedRole === 'TEACHER' && !teacherCode)}
               className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Memproses...' : 'Lanjutkan'}

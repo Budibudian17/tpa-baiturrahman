@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { BookOpen, Camera, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { BookOpen } from 'lucide-react'
 
 interface User {
   id: string
   name: string
+  photoUrl?: string
 }
 
 export default function MemorizationForm() {
@@ -15,14 +16,11 @@ export default function MemorizationForm() {
     type: 'QURAN', // QURAN or ASMAUL_HUSNA
     surahName: '',
     verse: '',
-    asmaulHusnaCount: '',
-    photoFile: null as File | null
+    asmaulHusnaCount: ''
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchStudents()
@@ -38,34 +36,6 @@ export default function MemorizationForm() {
     }
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const maxSize = 500 * 1024 // 500KB
-    if (file.size > maxSize) {
-      setError(
-        `Ukuran foto terlalu besar (${(file.size / 1024).toFixed(0)} KB). Maksimal 500 KB. ` +
-        `<a href="https://www.iloveimg.com/resize-image" target="_blank" rel="noopener noreferrer" class="text-green-600 underline font-medium">Resize foto di sini</a>`
-      )
-      return
-    }
-    setFormData({ ...formData, photoFile: file })
-    setError('')
-  }
-
-  const uploadPhoto = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result as string
-        resolve(base64String)
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -73,36 +43,15 @@ export default function MemorizationForm() {
     setSuccess(false)
 
     try {
-      let photoUrl = null
-
-      // Upload photo if provided
-      if (formData.photoFile) {
-        setUploading(true)
-        try {
-          photoUrl = await uploadPhoto(formData.photoFile)
-        } catch (uploadError) {
-          console.error('Photo upload failed:', uploadError)
-          setError('Gagal upload foto. Silakan coba lagi.')
-          return
-        } finally {
-          setUploading(false)
-        }
-      }
-
-      const submitData = {
-        ...formData,
-        photoUrl
-      }
-
       const res = await fetch('/api/memorizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify(formData)
       })
 
       if (res.ok) {
         setSuccess(true)
-        setFormData({ userId: '', type: 'QURAN', surahName: '', verse: '', asmaulHusnaCount: '', photoFile: null })
+        setFormData({ userId: '', type: 'QURAN', surahName: '', verse: '', asmaulHusnaCount: '' })
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch (error) {
@@ -151,9 +100,17 @@ export default function MemorizationForm() {
                     : 'border-gray-200 hover:border-green-400'
                 }`}
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
-                  {student.name.charAt(0).toUpperCase()}
-                </div>
+                {student.photoUrl ? (
+                  <img
+                    src={student.photoUrl}
+                    alt={student.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {student.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="font-medium text-gray-800 text-sm">{student.name}</span>
               </button>
             ))}
@@ -244,40 +201,6 @@ export default function MemorizationForm() {
             </p>
           </div>
         )}
-
-        {/* Photo Upload (Optional) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Foto Bukti (Opsional - +0.5 Bintang)
-          </label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className={`w-full p-4 border-2 border-dashed rounded-lg transition flex items-center justify-center gap-2 ${
-              formData.photoFile
-                ? 'border-green-500 bg-green-50 text-green-700'
-                : 'border-gray-300 hover:border-green-400 text-gray-600'
-            }`}
-          >
-            <Camera className="w-5 h-5" />
-            {formData.photoFile ? formData.photoFile.name : 'Tambah Foto'}
-          </button>
-          <p className="text-xs text-gray-500 mt-2">
-            Maksimal 500 KB
-          </p>
-          {formData.photoFile && (
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.photoFile.name} ({(formData.photoFile.size / 1024).toFixed(1)} KB)
-            </p>
-          )}
-        </div>
 
         <button
           type="submit"

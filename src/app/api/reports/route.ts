@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
         ...reportData,
         user: userData ? {
           id: reportData.userId,
-          name: userData.name
+          name: userData.name,
+          photoUrl: userData.photoUrl || null
         } : null
       })
     }

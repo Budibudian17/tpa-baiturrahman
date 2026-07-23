@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { User, GraduationCap } from 'lucide-react'
+import { User, GraduationCap, Camera, X } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -13,10 +13,41 @@ export default function RegisterPage() {
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'STUDENT' as 'STUDENT' | 'TEACHER'
+    teacherCode: '',
+    role: 'STUDENT' as 'STUDENT' | 'TEACHER',
+    photoFile: null as File | null
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const maxSize = 500 * 1024 // 500KB
+    if (file.size > maxSize) {
+      setError(
+        `Ukuran foto terlalu besar (${(file.size / 1024).toFixed(0)} KB). Maksimal 500 KB. ` +
+        `<a href="https://www.iloveimg.com/resize-image" target="_blank" rel="noopener noreferrer" class="text-green-600 underline font-medium">Resize foto di sini</a>`
+      )
+      return
+    }
+    setFormData({ ...formData, photoFile: file })
+    setError('')
+  }
+
+  const uploadPhoto = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        resolve(base64String)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,9 +63,29 @@ export default function RegisterPage() {
       return
     }
 
+    // Teacher code validation for teachers
+    if (formData.role === 'TEACHER' && !formData.teacherCode) {
+      setError('Guru harus memasukkan kode guru')
+      return
+    }
+
     setLoading(true)
 
     try {
+      let photoUrl = null
+
+      // Upload photo if provided
+      if (formData.photoFile) {
+        try {
+          photoUrl = await uploadPhoto(formData.photoFile)
+        } catch (uploadError) {
+          console.error('Photo upload failed:', uploadError)
+          setError('Gagal upload foto. Silakan coba lagi.')
+          setLoading(false)
+          return
+        }
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,7 +94,9 @@ export default function RegisterPage() {
           email: formData.email,
           username: formData.username,
           password: formData.password,
-          role: formData.role
+          role: formData.role,
+          teacherCode: formData.role === 'TEACHER' ? formData.teacherCode : null,
+          photoUrl
         })
       })
 
@@ -201,6 +254,61 @@ export default function RegisterPage() {
                 placeholder="Ulangi password"
                 required
               />
+            </div>
+
+            {/* Teacher Code for Teachers */}
+            {formData.role === 'TEACHER' && (
+              <div>
+                <label htmlFor="teacherCode" className="block text-sm font-medium text-gray-700 mb-2">
+                  Kode Guru <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="teacherCode"
+                  type="password"
+                  value={formData.teacherCode}
+                  onChange={(e) => setFormData({ ...formData, teacherCode: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-gray-800 placeholder-gray-400"
+                  placeholder="Masukkan kode guru"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Kode khusus untuk mendaftar sebagai guru
+                </p>
+              </div>
+            )}
+
+            {/* Photo Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Foto Profil
+              </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full p-4 border-2 border-dashed rounded-lg transition flex items-center justify-center gap-2 ${
+                  formData.photoFile
+                    ? 'border-green-500 bg-green-50 text-green-700'
+                    : 'border-gray-300 hover:border-green-400 text-gray-600'
+                }`}
+              >
+                <Camera className="w-5 h-5" />
+                {formData.photoFile ? formData.photoFile.name : 'Tambah Foto Profil'}
+              </button>
+              <p className="text-xs text-gray-500 mt-2">
+                Maksimal 500 KB (Opsional)
+              </p>
+              {formData.photoFile && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.photoFile.name} ({(formData.photoFile.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
             </div>
 
             {error && (

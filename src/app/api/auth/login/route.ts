@@ -34,13 +34,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const userData = userDoc.data()
+    const userData = userDoc.data() as any
+
     const responseUser = {
       id: user.uid,
       name: userData.name,
       username: userData.username,
       role: userData.role,
-      stars: userData.stars
+      stars: userData.stars,
+      photoUrl: userData.photoUrl || null
     }
 
     const response = NextResponse.json({ user: responseUser })

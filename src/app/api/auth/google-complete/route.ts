@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
           name: userData.name,
           username: userData.username,
           role: userData.role,
-          stars: userData.stars
+          stars: userData.stars,
+          photoUrl: userData.photoUrl || null
         }
       })
     }
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('Google complete - Starting...')
-    const { uid, displayName, email, photoURL, role } = await request.json()
+    const { uid, displayName, email, photoURL, role, teacherCode } = await request.json()
 
     console.log('Google complete - UID:', uid)
     console.log('Google complete - Display name:', displayName)
@@ -59,6 +60,25 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       )
+    }
+
+    // Teacher code validation for teachers
+    if (role === 'TEACHER') {
+      if (!teacherCode) {
+        return NextResponse.json(
+          { error: 'Teachers must provide teacher code' },
+          { status: 400 }
+        )
+      }
+
+      // Validate teacher code against environment variable
+      const validTeacherCode = process.env.TEACHER_SECRET_CODE || 'guruTpa_1998'
+      if (teacherCode !== validTeacherCode) {
+        return NextResponse.json(
+          { error: 'Invalid teacher code' },
+          { status: 401 }
+        )
+      }
     }
 
     // Generate username from email
@@ -84,7 +104,7 @@ export async function POST(request: NextRequest) {
       username,
       role,
       stars: 0,
-      photoURL,
+      photoUrl: photoURL || null,
       createdAt: new Date().toISOString()
     })
     console.log('Google complete - User document created')
@@ -101,7 +121,8 @@ export async function POST(request: NextRequest) {
       name: displayName,
       username,
       role,
-      stars: 0
+      stars: 0,
+      photoUrl: photoURL || null
     }
 
     return NextResponse.json({ user }, { status: 201 })

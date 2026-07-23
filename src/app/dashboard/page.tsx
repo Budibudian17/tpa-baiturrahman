@@ -16,8 +16,10 @@ interface User {
   username: string
   role: string
   stars: number
+  photoUrl?: string
   nameChangeCount?: number
   lastNameChangeAt?: string
+  additionalPassword?: string
 }
 
 interface Report {
