@@ -4,10 +4,11 @@ import { db } from '@/lib/firebase'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const reportRef = doc(db, 'reports', params.id)
+    const { id } = await params
+    const reportRef = doc(db, 'reports', id)
     const reportDoc = await getDoc(reportRef)
 
     if (!reportDoc.exists()) {
