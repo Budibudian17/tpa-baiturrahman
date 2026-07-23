@@ -74,10 +74,10 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const user = JSON.parse(session)
-    console.log('PATCH /api/users - Parsed user:', user)
+    const sessionData = JSON.parse(session)
+    console.log('PATCH /api/users - Parsed session:', sessionData)
 
-    if (user.id !== userId) {
+    if (sessionData.id !== userId) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -104,18 +104,11 @@ export async function PATCH(request: NextRequest) {
 
     console.log('PATCH /api/users - User updated successfully')
 
-    // Update session using response cookie
-    const updatedUser = { ...user, name, photoUrl: photoUrl || userData.photoUrl }
+    // Keep session as just ID (no need to update it)
     const response = NextResponse.json(
       { message: 'Profile updated successfully', name, photoUrl: photoUrl || userData.photoUrl },
       { status: 200 }
     )
-    response.cookies.set('session', JSON.stringify(updatedUser), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
-    })
 
     return response
   } catch (error) {

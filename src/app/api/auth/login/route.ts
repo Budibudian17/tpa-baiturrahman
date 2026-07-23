@@ -45,8 +45,10 @@ export async function POST(request: NextRequest) {
       photoUrl: userData.photoUrl || null
     }
 
+    // Only store minimal data in cookie to avoid size limit
+    const sessionData = { id: user.uid }
     const response = NextResponse.json({ user: responseUser })
-    response.cookies.set('session', JSON.stringify(responseUser), {
+    response.cookies.set('session', JSON.stringify(sessionData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

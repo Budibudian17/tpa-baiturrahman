@@ -47,16 +47,23 @@ export default function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
-    const session = localStorage.getItem('session')
-    if (!session) {
-      router.push('/login')
-      return
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch('/api/auth/me')
+        if (!res.ok) {
+          router.push('/login')
+          return
+        }
+        const userData = await res.json()
+        setUser(userData)
+        fetchReports(userData.id)
+      } catch (error) {
+        console.error('Failed to fetch user data:', error)
+        router.push('/login')
+      }
     }
 
-    const userData = JSON.parse(session)
-    setUser(userData)
-    fetchReports(userData.id)
-    refreshUserData()
+    fetchUserData()
   }, [router])
 
   const fetchReports = async (userId: string) => {

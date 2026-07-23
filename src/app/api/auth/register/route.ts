@@ -79,10 +79,17 @@ export async function POST(request: NextRequest) {
       photoUrl: photoUrl || null
     }
 
-    return NextResponse.json(
-      { user: userData },
-      { status: 201 }
-    )
+    // Only store minimal data in cookie to avoid size limit
+    const sessionData = { id: user.uid }
+    const response = NextResponse.json({ user: userData }, { status: 201 })
+    response.cookies.set('session', JSON.stringify(sessionData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    })
+
+    return response
   } catch (error: any) {
     console.error('Registration error:', error)
 

@@ -32,10 +32,6 @@ export default function LoginPage() {
         return
       }
 
-      localStorage.setItem('session', JSON.stringify(data.user))
-      // Set cookie for middleware (properly encoded)
-      const sessionValue = encodeURIComponent(JSON.stringify(data.user))
-      document.cookie = `session=${sessionValue}; path=/; max-age=604800; SameSite=Lax`
       router.push('/dashboard')
       router.refresh()
     } catch (err: any) {
