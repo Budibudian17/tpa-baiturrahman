@@ -276,7 +276,7 @@ function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, re
         {reports.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Belum ada laporan</p>
         ) : (
-          <div className="space-y-3">
+          <div className="max-h-96 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
             {pendingReports.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-yellow-600 flex items-center gap-2">
@@ -295,7 +295,7 @@ function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, re
                   <CheckCircle className="w-4 h-4" />
                   Disetujui ({approvedReports.length})
                 </p>
-                {approvedReports.slice(0, 3).map(report => (
+                {approvedReports.map(report => (
                   <ReportCard key={report.id} report={report} />
                 ))}
               </div>
