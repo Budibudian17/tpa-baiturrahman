@@ -55,6 +55,8 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { userId, name, photoUrl } = body
 
+    console.log('PATCH /api/users - Request body:', { userId, name, photoUrl })
+
     if (!userId || !name) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -63,6 +65,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const session = request.cookies.get('session')?.value
+    console.log('PATCH /api/users - Session cookie:', session)
+
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -71,6 +75,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const user = JSON.parse(session)
+    console.log('PATCH /api/users - Parsed user:', user)
+
     if (user.id !== userId) {
       return NextResponse.json(
         { error: 'Forbidden' },
@@ -95,6 +101,8 @@ export async function PATCH(request: NextRequest) {
       name,
       photoUrl: photoUrl || userData.photoUrl
     })
+
+    console.log('PATCH /api/users - User updated successfully')
 
     // Update session using response cookie
     const updatedUser = { ...user, name, photoUrl: photoUrl || userData.photoUrl }

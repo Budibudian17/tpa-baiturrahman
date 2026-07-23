@@ -38,7 +38,8 @@ export default function LoginPage() {
       document.cookie = `session=${sessionValue}; path=/; max-age=604800; SameSite=Lax`
       router.push('/dashboard')
       router.refresh()
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Login error:', err)
       setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)

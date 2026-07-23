@@ -28,6 +28,7 @@ export default function ReportsQueue() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
+  const [processingId, setProcessingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReports()
@@ -48,6 +49,7 @@ export default function ReportsQueue() {
   }
 
   const handleApprove = async (reportId: string) => {
+    setProcessingId(reportId)
     try {
       const res = await fetch(`/api/reports/${reportId}/approve`, { method: 'POST' })
       if (res.ok) {
@@ -55,6 +57,8 @@ export default function ReportsQueue() {
       }
     } catch (error) {
       console.error('Failed to approve report:', error)
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -62,6 +66,7 @@ export default function ReportsQueue() {
     const reason = prompt('Alasan penolakan:')
     if (!reason) return
 
+    setProcessingId(reportId)
     try {
       const res = await fetch(`/api/reports/${reportId}/reject`, {
         method: 'POST',
@@ -73,12 +78,15 @@ export default function ReportsQueue() {
       }
     } catch (error) {
       console.error('Failed to reject report:', error)
+    } finally {
+      setProcessingId(null)
     }
   }
 
   const handleDelete = async (reportId: string) => {
     if (!confirm('Yakin ingin menghapus laporan ini?')) return
-    
+
+    setProcessingId(reportId)
     try {
       const res = await fetch(`/api/reports/${reportId}`, { method: 'DELETE' })
       if (res.ok) {
@@ -86,6 +94,8 @@ export default function ReportsQueue() {
       }
     } catch (error) {
       console.error('Failed to delete report:', error)
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -175,24 +185,39 @@ export default function ReportsQueue() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(report.id)}
-                    className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition"
+                    disabled={processingId === report.id}
+                    className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Setujui"
                   >
-                    <Check className="w-4 h-4" />
+                    {processingId === report.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
                   </button>
                   <button
                     onClick={() => handleReject(report.id)}
-                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
+                    disabled={processingId === report.id}
+                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Tolak"
                   >
-                    <X className="w-4 h-4" />
+                    {processingId === report.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
                   </button>
                   <button
                     onClick={() => handleDelete(report.id)}
-                    className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition"
+                    disabled={processingId === report.id}
+                    className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Hapus"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {processingId === report.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>

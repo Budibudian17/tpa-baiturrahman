@@ -56,6 +56,7 @@ export default function DashboardPage() {
     const userData = JSON.parse(session)
     setUser(userData)
     fetchReports(userData.id)
+    refreshUserData()
   }, [router])
 
   const fetchReports = async (userId: string) => {
@@ -70,6 +71,23 @@ export default function DashboardPage() {
       console.error('Failed to fetch reports:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const refreshUserData = async () => {
+    try {
+      const session = localStorage.getItem('session')
+      if (session) {
+        const userData = JSON.parse(session)
+        const res = await fetch(`/api/users/${userData.id}`)
+        if (res.ok) {
+          const updatedUser = await res.json()
+          setUser(updatedUser)
+          localStorage.setItem('session', JSON.stringify(updatedUser))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error)
     }
   }
 
