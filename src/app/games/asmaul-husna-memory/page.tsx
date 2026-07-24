@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, RotateCcw, Trophy } from 'lucide-react'
 import { ASMAUL_HUSNA } from '@/data/asmaulHusnaData'
 
+export const dynamic = 'force-dynamic'
+
 const LEVEL_CONFIG = {
   easy: { cardCount: 5, name: 'Mudah' },
   medium: { cardCount: 10, name: 'Sedang' },
