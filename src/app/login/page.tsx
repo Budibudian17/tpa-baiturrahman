@@ -18,6 +18,16 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
+    // Validate email format if it looks like an email
+    if (username.includes('@')) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/
+      if (!emailRegex.test(username)) {
+        setError('Format email harus @gmail.com')
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
