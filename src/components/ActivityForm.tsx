@@ -36,11 +36,11 @@ export default function ActivityForm({ type, userId, onCancel, onSubmit }: Activ
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Limit file size to 500KB to avoid Firestore document size limit (1MB)
-      const maxSize = 500 * 1024 // 500KB
+      // Limit file size to 750KB to avoid Firestore document size limit (1MB)
+      const maxSize = 750 * 1024 // 750KB (Firestore limit is 1MB per document, base64 adds ~33%)
       if (file.size > maxSize) {
         setError(
-          `Ukuran foto terlalu besar (${(file.size / 1024).toFixed(0)} KB). Maksimal 500 KB. ` +
+          `Ukuran foto terlalu besar (${(file.size / 1024).toFixed(0)} KB). Maksimal 750 KB. ` +
           `<a href="https://www.iloveimg.com/resize-image" target="_blank" rel="noopener noreferrer" class="text-green-600 underline font-medium">Resize foto di sini</a>`
         )
         return
@@ -348,7 +348,7 @@ export default function ActivityForm({ type, userId, onCancel, onSubmit }: Activ
             {formData.photoFile ? formData.photoFile.name : 'Tambah Foto'}
           </button>
           <p className="text-xs text-gray-500 mt-2">
-            Maksimal 500 KB.
+            Maksimal 750 KB.
           </p>
           {formData.photoFile && (
             <p className="text-xs text-gray-500 mt-1">
