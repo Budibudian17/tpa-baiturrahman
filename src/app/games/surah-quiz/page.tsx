@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, RotateCcw, Trophy, CheckCircle, XCircle } from 'lucide-react'
 import { SURAH_DATA } from '@/data/surahData'
 
+export const dynamic = 'force-dynamic'
+
 export default function SurahQuizGame() {
   const router = useRouter()
   const searchParams = useSearchParams()

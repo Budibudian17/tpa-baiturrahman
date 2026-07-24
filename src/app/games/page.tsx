@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Gamepad2, BookOpen, Brain } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function GamesPage() {
   const router = useRouter()
 

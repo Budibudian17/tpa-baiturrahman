@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Star, Zap, Flame } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function SurahQuizLevelPage() {
   const router = useRouter()
 
