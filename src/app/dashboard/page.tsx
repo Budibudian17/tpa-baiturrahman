@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { LogOut, Plus, Clock, CheckCircle, XCircle, Handshake, Book, Brain, Building, Star, X, Settings } from 'lucide-react'
+import { LogOut, Plus, Clock, CheckCircle, XCircle, Handshake, Book, Brain, Building, Star, X, Settings, Gamepad2, ChevronUp, ChevronDown } from 'lucide-react'
 import ActivityForm from '@/components/ActivityForm'
 import ReportsQueue from '@/components/ReportsQueue'
 import MemorizationForm from '@/components/MemorizationForm'
@@ -192,6 +192,17 @@ export default function DashboardPage() {
           onUpdate={(updatedUser) => setUser(updatedUser)}
         />
       )}
+
+      {/* Floating Game Widget - Only for students */}
+      {!isTeacher && (
+        <button
+          onClick={() => router.push('/games')}
+          className="fixed bottom-6 right-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50"
+          title="Main Game"
+        >
+          <Gamepad2 className="w-6 h-6" />
+        </button>
+      )}
     </div>
   )
 }
@@ -320,35 +331,36 @@ function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, re
 }
 
 function TeacherDashboard() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'reports' | 'memorization' | 'leaderboard'>('reports')
 
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm p-2 flex gap-2">
+      <div className="bg-white rounded-xl shadow-sm p-2 flex flex-wrap gap-2">
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
             activeTab === 'reports'
               ? 'bg-green-500 text-white'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          Laporan Masuk
+          Laporan
         </button>
         <button
           onClick={() => setActiveTab('memorization')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
             activeTab === 'memorization'
               ? 'bg-green-500 text-white'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          Input Hafalan
+          Hafalan
         </button>
         <button
           onClick={() => setActiveTab('leaderboard')}
-          className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg font-medium transition ${
             activeTab === 'leaderboard'
               ? 'bg-green-500 text-white'
               : 'text-gray-600 hover:bg-gray-100'
@@ -361,6 +373,18 @@ function TeacherDashboard() {
       {activeTab === 'reports' && <ReportsQueue />}
       {activeTab === 'memorization' && <MemorizationForm />}
       {activeTab === 'leaderboard' && <Leaderboard />}
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl shadow-sm p-4">
+        <h3 className="font-bold text-gray-800 mb-3">Aksi Cepat</h3>
+        <button
+          onClick={() => router.push('/students')}
+          className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2"
+        >
+          <Settings className="w-5 h-5" />
+          Kelola Siswa
+        </button>
+      </div>
     </div>
   )
 }

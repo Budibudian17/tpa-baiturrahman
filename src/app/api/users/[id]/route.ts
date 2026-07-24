@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export async function GET(
@@ -30,6 +30,34 @@ export async function GET(
     console.error('Failed to fetch user:', error)
     return NextResponse.json(
       { error: 'Failed to fetch user' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { stars } = body
+
+    if (typeof stars !== 'number' || stars < 0) {
+      return NextResponse.json(
+        { error: 'Invalid stars value' },
+        { status: 400 }
+      )
+    }
+
+    await updateDoc(doc(db, 'users', id), { stars })
+
+    return NextResponse.json({ success: true, stars })
+  } catch (error) {
+    console.error('Failed to update user stars:', error)
+    return NextResponse.json(
+      { error: 'Failed to update user stars' },
       { status: 500 }
     )
   }
