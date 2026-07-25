@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Star, ChevronUp, ChevronDown, Settings } from 'lucide-react'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface User {
   id: string
@@ -20,33 +22,39 @@ export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [editingName, setEditingName] = useState<string | null>(null)
   const [editNameValue, setEditNameValue] = useState('')
+  const [updatingStars, setUpdatingStars] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchStudents()
+    // Use realtime listener with onSnapshot
+    const q = query(collection(db, 'users'), where('role', '==', 'STUDENT'))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const studentsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as User[]
+      setStudents(studentsData)
+      setLoading(false)
+    }, (error) => {
+      console.error('Failed to listen to students:', error)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
   }, [])
 
-  const fetchStudents = async () => {
-    try {
-      const res = await fetch('/api/users')
-      const data = await res.json()
-      setStudents(data.users || [])
-    } catch (error) {
-      console.error('Failed to fetch students:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleUpdateStars = async (userId: string, newStars: number) => {
+    setUpdatingStars(userId)
     try {
       await fetch(`/api/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stars: newStars })
       })
-      await fetchStudents()
+      // No need to fetchStudents - realtime listener will update automatically
     } catch (error) {
       console.error('Failed to update stars:', error)
+    } finally {
+      setUpdatingStars(null)
     }
   }
 
@@ -62,7 +70,7 @@ export default function StudentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, name: newName })
       })
-      await fetchStudents()
+      // No need to fetchStudents - realtime listener will update automatically
       setEditingName(null)
     } catch (error) {
       console.error('Failed to update name:', error)
@@ -195,18 +203,36 @@ export default function StudentsPage() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleIncrementStars(student.id, student.stars, -0.5)}
-                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition"
+                          disabled={updatingStars === student.id}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
+                            updatingStars === student.id
+                              ? 'bg-gray-200 cursor-not-allowed'
+                              : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
                         >
-                          <ChevronDown className="w-4 h-4 text-gray-600" />
+                          {updatingStars === student.id ? (
+                            <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                          )}
                         </button>
                         <span className="w-16 text-center font-bold text-gray-800">
                           {student.stars % 1 === 0 ? student.stars : student.stars.toFixed(1)}
                         </span>
                         <button
                           onClick={() => handleIncrementStars(student.id, student.stars, 0.5)}
-                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition"
+                          disabled={updatingStars === student.id}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
+                            updatingStars === student.id
+                              ? 'bg-gray-200 cursor-not-allowed'
+                              : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
                         >
-                          <ChevronUp className="w-4 h-4 text-gray-600" />
+                          {updatingStars === student.id ? (
+                            <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <ChevronUp className="w-4 h-4 text-gray-600" />
+                          )}
                         </button>
                       </div>
                     </div>

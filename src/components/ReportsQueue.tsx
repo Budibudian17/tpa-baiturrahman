@@ -53,7 +53,7 @@ export default function ReportsQueue() {
     try {
       const res = await fetch(`/api/reports/${reportId}/approve`, { method: 'POST' })
       if (res.ok) {
-        fetchReports()
+        await fetchReports()
       }
     } catch (error) {
       console.error('Failed to approve report:', error)
@@ -74,7 +74,7 @@ export default function ReportsQueue() {
         body: JSON.stringify({ reason })
       })
       if (res.ok) {
-        fetchReports()
+        await fetchReports()
       }
     } catch (error) {
       console.error('Failed to reject report:', error)
@@ -90,7 +90,7 @@ export default function ReportsQueue() {
     try {
       const res = await fetch(`/api/reports/${reportId}`, { method: 'DELETE' })
       if (res.ok) {
-        fetchReports()
+        await fetchReports()
       }
     } catch (error) {
       console.error('Failed to delete report:', error)

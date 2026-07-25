@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { LogOut, Plus, Clock, CheckCircle, XCircle, Handshake, Book, Brain, Building, Star, X, Settings, Gamepad2, ChevronUp, ChevronDown } from 'lucide-react'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import ActivityForm from '@/components/ActivityForm'
 import ReportsQueue from '@/components/ReportsQueue'
 import MemorizationForm from '@/components/MemorizationForm'
@@ -48,25 +50,34 @@ export default function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const res = await fetch('/api/auth/me')
-        if (!res.ok) {
-          router.push('/login')
-          return
-        }
-        const userData = await res.json()
-        setUser(userData)
-        await fetchReports(userData.id)
-      } catch (error) {
-        console.error('Failed to fetch user data:', error)
-        router.push('/login')
-      } finally {
-        setLoading(false)
-      }
+    // Get session from localStorage
+    const session = localStorage.getItem('session')
+    if (!session) {
+      router.push('/login')
+      return
     }
 
-    fetchUserData()
+    const userId = JSON.parse(session).userId
+
+    // Use realtime listener for user data
+    const userDocRef = doc(db, 'users', userId)
+    const unsubscribe = onSnapshot(userDocRef, (doc) => {
+      if (doc.exists()) {
+        const userData = doc.data() as User
+        const { id: _id, ...userDataWithoutId } = userData
+        setUser({ id: doc.id, ...userDataWithoutId })
+        fetchReports(doc.id)
+      } else {
+        router.push('/login')
+      }
+      setLoading(false)
+    }, (error) => {
+      console.error('Failed to listen to user data:', error)
+      router.push('/login')
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
   }, [router])
 
   const fetchReports = async (userId: string) => {
