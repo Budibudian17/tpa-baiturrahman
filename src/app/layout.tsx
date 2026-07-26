@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fredoka, Noto_Naskh_Arabic } from "next/font/google";
+import { Fredoka, Amiri } from "next/font/google";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -9,10 +9,10 @@ const fredoka = Fredoka({
   display: "swap",
 });
 
-const notoNaskhArabic = Noto_Naskh_Arabic({
+const amiri = Amiri({
   variable: "--font-arabic",
   subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
   display: "swap",
 });
 
@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${fredoka.variable} ${notoNaskhArabic.variable} h-full antialiased`}
+      className={`${fredoka.variable} ${amiri.variable} h-full antialiased`}
     >
       <head>
         <link rel="icon" href="/icon-192x192.svg" />

@@ -50,34 +50,42 @@ export default function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
-    // Get session from localStorage
-    const session = localStorage.getItem('session')
-    if (!session) {
-      router.push('/login')
-      return
+    const fetchUserData = async () => {
+      try {
+        // First, use API to get initial user data
+        const res = await fetch('/api/auth/me')
+        
+        if (!res.ok) {
+          router.push('/login')
+          return
+        }
+        
+        const userData = await res.json()
+        setUser(userData)
+        await fetchReports(userData.id)
+        
+        // Then, set up realtime listener for user data updates
+        const userDocRef = doc(db, 'users', userData.id)
+        const unsubscribe = onSnapshot(userDocRef, (doc) => {
+          if (doc.exists()) {
+            const updatedData = doc.data() as User
+            const { id: _id, ...dataWithoutId } = updatedData
+            setUser({ id: doc.id, ...dataWithoutId })
+          }
+        }, (error) => {
+          console.error('Realtime listener error:', error)
+        })
+
+        return unsubscribe
+      } catch (error) {
+        console.error('Failed to fetch user data:', error)
+        router.push('/login')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const userId = JSON.parse(session).userId
-
-    // Use realtime listener for user data
-    const userDocRef = doc(db, 'users', userId)
-    const unsubscribe = onSnapshot(userDocRef, (doc) => {
-      if (doc.exists()) {
-        const userData = doc.data() as User
-        const { id: _id, ...userDataWithoutId } = userData
-        setUser({ id: doc.id, ...userDataWithoutId })
-        fetchReports(doc.id)
-      } else {
-        router.push('/login')
-      }
-      setLoading(false)
-    }, (error) => {
-      console.error('Failed to listen to user data:', error)
-      router.push('/login')
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
+    fetchUserData()
   }, [router])
 
   const fetchReports = async (userId: string) => {

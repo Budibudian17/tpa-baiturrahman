@@ -39,8 +39,12 @@ export default function LoginPage() {
 
       if (!res.ok) {
         setError(data.error || 'Login failed')
+        setLoading(false)
         return
       }
+
+      // Store session in localStorage for client-side access
+      localStorage.setItem('session', JSON.stringify({ userId: data.user.id }))
 
       router.push('/dashboard')
       router.refresh()

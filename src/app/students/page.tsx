@@ -25,21 +25,34 @@ export default function StudentsPage() {
   const [updatingStars, setUpdatingStars] = useState<string | null>(null)
 
   useEffect(() => {
-    // Use realtime listener with onSnapshot
-    const q = query(collection(db, 'users'), where('role', '==', 'STUDENT'))
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const studentsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as User[]
-      setStudents(studentsData)
-      setLoading(false)
-    }, (error) => {
-      console.error('Failed to listen to students:', error)
-      setLoading(false)
-    })
+    const fetchStudents = async () => {
+      try {
+        // First, use API to get initial data
+        const res = await fetch('/api/users')
+        const data = await res.json()
+        setStudents(data.users || [])
+        
+        // Then, set up realtime listener for updates
+        const q = query(collection(db, 'users'), where('role', '==', 'STUDENT'))
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const studentsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as User[]
+          setStudents(studentsData)
+        }, (error) => {
+          console.error('Realtime listener error:', error)
+        })
 
-    return () => unsubscribe()
+        return unsubscribe
+      } catch (error) {
+        console.error('Failed to fetch students:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStudents()
   }, [])
 
   const handleUpdateStars = async (userId: string, newStars: number) => {
@@ -50,7 +63,7 @@ export default function StudentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stars: newStars })
       })
-      // No need to fetchStudents - realtime listener will update automatically
+      // Realtime listener will update automatically
     } catch (error) {
       console.error('Failed to update stars:', error)
     } finally {
@@ -70,7 +83,7 @@ export default function StudentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, name: newName })
       })
-      // No need to fetchStudents - realtime listener will update automatically
+      // Realtime listener will update automatically
       setEditingName(null)
     } catch (error) {
       console.error('Failed to update name:', error)

@@ -6,7 +6,10 @@ export async function GET(request: NextRequest) {
   try {
     const session = request.cookies.get('session')?.value
 
+    console.log('Session cookie:', session)
+
     if (!session) {
+      console.log('No session cookie found')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -16,7 +19,11 @@ export async function GET(request: NextRequest) {
     const sessionData = JSON.parse(session)
     const userId = sessionData.id
 
+    console.log('Session data:', sessionData)
+    console.log('User ID:', userId)
+
     if (!userId) {
+      console.log('No user ID in session')
       return NextResponse.json(
         { error: 'Invalid session' },
         { status: 401 }
@@ -26,6 +33,7 @@ export async function GET(request: NextRequest) {
     const userDoc = await getDoc(doc(db, 'users', userId))
 
     if (!userDoc.exists()) {
+      console.log('User not found in Firestore:', userId)
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -33,6 +41,8 @@ export async function GET(request: NextRequest) {
     }
 
     const userData = userDoc.data() as any
+
+    console.log('User data from Firestore:', userData)
 
     return NextResponse.json({
       id: userDoc.id,

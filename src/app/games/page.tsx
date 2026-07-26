@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Gamepad2, BookOpen, Brain } from 'lucide-react'
+import { ArrowLeft, Gamepad2, BookOpen, Brain, Mic } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +26,15 @@ export default function GamesPage() {
       color: 'from-teal-500 to-cyan-600',
       difficulty: 'Sedang',
       hasLevels: true
+    },
+    {
+      id: 'doa-harian',
+      title: 'Doa Harian',
+      description: 'Latih hafalan doa dengan suara',
+      icon: <Mic className="w-12 h-12" />,
+      color: 'from-purple-500 to-indigo-600',
+      difficulty: 'Sedang',
+      hasLevels: false
     }
   ]
 
@@ -88,15 +97,6 @@ export default function GamesPage() {
               <div>
                 <p className="font-medium text-gray-700">Huruf Hijaiyah</p>
                 <p className="text-sm text-gray-500">Matching Game</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-              <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
-                <Brain className="w-6 h-6 text-gray-500" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">Doa Harian</p>
-                <p className="text-sm text-gray-500">Quiz Game</p>
               </div>
             </div>
           </div>
