@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Check, X, Edit2, Trash2, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { collection, query, orderBy, onSnapshot, getDoc, doc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface Report {
   id: string
@@ -20,6 +22,7 @@ interface Report {
   user: {
     name: string
     photoUrl?: string
+    id?: string
   }
   createdAt: string
   rejectionReason?: string
@@ -34,22 +37,48 @@ export default function ReportsQueue() {
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    fetchReports()
-  }, [])
+    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'))
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const reportsData = await Promise.all(
+        snapshot.docs.map(async (docSnapshot) => {
+          const reportData = docSnapshot.data()
+          const userDoc = await getDoc(doc(db, 'users', reportData.userId))
+          const userData = userDoc.data() as any
 
-  const fetchReports = async () => {
-    try {
-      console.log('Fetching all reports...')
-      const res = await fetch('/api/reports')
-      const data = await res.json()
-      console.log('All reports response:', data)
-      setReports(data.reports || [])
-    } catch (error) {
-      console.error('Failed to fetch reports:', error)
-    } finally {
+          return {
+            id: docSnapshot.id,
+            type: reportData.type,
+            location: reportData.location,
+            prayerTime: reportData.prayerTime,
+            category: reportData.category,
+            surahName: reportData.surahName,
+            startVerse: reportData.startVerse,
+            endVerse: reportData.endVerse,
+            description: reportData.description,
+            photoUrl: reportData.photoUrl,
+            stars: reportData.stars,
+            status: reportData.status,
+            userId: reportData.userId,
+            createdAt: reportData.createdAt,
+            rejectionReason: reportData.rejectionReason,
+            user: userData ? {
+              id: reportData.userId,
+              name: userData.name,
+              photoUrl: userData.photoUrl || null
+            } : null
+          } as Report
+        })
+      )
+
+      setReports(reportsData)
       setLoading(false)
-    }
-  }
+    }, (error) => {
+      console.error('Realtime listener error:', error)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const toggleStudentExpand = (userId: string) => {
     const newExpanded = new Set(expandedStudents)
@@ -81,8 +110,8 @@ export default function ReportsQueue() {
     setProcessingId(reportId)
     try {
       const res = await fetch(`/api/reports/${reportId}/approve`, { method: 'POST' })
-      if (res.ok) {
-        await fetchReports()
+      if (!res.ok) {
+        console.error('Failed to approve report')
       }
     } catch (error) {
       console.error('Failed to approve report:', error)
@@ -102,8 +131,8 @@ export default function ReportsQueue() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason })
       })
-      if (res.ok) {
-        await fetchReports()
+      if (!res.ok) {
+        console.error('Failed to reject report')
       }
     } catch (error) {
       console.error('Failed to reject report:', error)
@@ -118,8 +147,8 @@ export default function ReportsQueue() {
     setProcessingId(reportId)
     try {
       const res = await fetch(`/api/reports/${reportId}`, { method: 'DELETE' })
-      if (res.ok) {
-        await fetchReports()
+      if (!res.ok) {
+        console.error('Failed to delete report')
       }
     } catch (error) {
       console.error('Failed to delete report:', error)
