@@ -33,6 +33,40 @@ export default function ActivityForm({ type, userId, onCancel, onSubmit }: Activ
     BACA_QURAN: 'Baca Quran'
   }
 
+  const prayerTimeLimits: Record<string, { endHour: number; endMinute: number }> = {
+    'Subuh': { endHour: 6, endMinute: 0 },
+    'Juhur': { endHour: 14, endMinute: 0 },
+    'Ashar': { endHour: 17, endMinute: 0 },
+    'Magrib': { endHour: 19, endMinute: 0 },
+    'Isya': { endHour: 22, endMinute: 0 }
+  }
+
+  const isPrayerTimeAvailable = (prayerTime: string): boolean => {
+    const now = new Date()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+    const limit = prayerTimeLimits[prayerTime]
+
+    if (!limit) return true
+
+    const currentTotalMinutes = currentHour * 60 + currentMinute
+    const limitTotalMinutes = limit.endHour * 60 + limit.endMinute
+
+    return currentTotalMinutes < limitTotalMinutes
+  }
+
+  const getPrayerTimeStatus = (prayerTime: string): { available: boolean; message?: string } => {
+    const available = isPrayerTimeAvailable(prayerTime)
+    if (!available) {
+      const limit = prayerTimeLimits[prayerTime]
+      return {
+        available: false,
+        message: `Sampai jam ${limit.endHour}:${limit.endMinute === 0 ? '00' : limit.endMinute}`
+      }
+    }
+    return { available: true }
+  }
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -173,21 +207,40 @@ export default function ActivityForm({ type, userId, onCancel, onSubmit }: Activ
                 Waktu Shalat
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {['Subuh', 'Juhur', 'Ashar', 'Magrib', 'Isya'].map((time) => (
-                  <button
-                    key={time}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, prayerTime: time })}
-                    className={`p-3 rounded-lg border-2 transition text-sm font-medium ${
-                      formData.prayerTime === time
-                        ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-gray-200 hover:border-green-400 text-gray-700'
-                    }`}
-                  >
-                    {time}
-                  </button>
-                ))}
+                {['Subuh', 'Juhur', 'Ashar', 'Magrib', 'Isya'].map((time) => {
+                  const status = getPrayerTimeStatus(time)
+                  const isAvailable = status.available
+
+                  return (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => isAvailable && setFormData({ ...formData, prayerTime: time })}
+                      disabled={!isAvailable}
+                      className={`p-3 rounded-lg border-2 transition text-sm font-medium relative ${
+                        formData.prayerTime === time
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : isAvailable
+                          ? 'border-gray-200 hover:border-green-400 text-gray-700'
+                          : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                      title={!isAvailable ? status.message : ''}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>{time}</span>
+                        {!isAvailable && (
+                          <span className="text-xs mt-1 text-gray-400">
+                            {status.message}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Waktu shalat dibatasi sesuai jadwal
+              </p>
             </div>
           </div>
         )}

@@ -308,7 +308,7 @@ export default function DoaHarianGame() {
       </div>
 
       {/* Answer Slots */}
-      <div className="flex flex-wrap gap-2 mb-6 min-h-[60px]">
+      <div className="flex flex-wrap gap-2 mb-6 min-h-[60px]" dir="rtl">
         {correctOrder.map((_, index) => (
           <div
             key={`slot-${index}`}
@@ -316,7 +316,7 @@ export default function DoaHarianGame() {
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, index)}
             onClick={() => handleRemoveWord(index)}
-            className={`w-24 h-12 border-2 rounded-lg flex items-center justify-center text-sm font-medium transition cursor-pointer ${
+            className={`w-24 h-12 border-2 rounded-lg flex items-center justify-center text-sm font-medium transition cursor-pointer font-arabic ${
               currentQuestion.placedWords[index]
                 ? 'bg-green-100 border-green-300 text-green-800'
                 : 'bg-gray-50 border-gray-300 text-gray-400'
@@ -328,7 +328,7 @@ export default function DoaHarianGame() {
       </div>
 
       {/* Word Pieces */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6" dir="rtl">
         {currentQuestion.words.map((wordPiece) => (
           <div
             key={wordPiece.id}
@@ -338,7 +338,7 @@ export default function DoaHarianGame() {
             onTouchStart={(e) => handleTouchStart(e, wordPiece.word, wordPiece.id)}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-grab ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-grab font-arabic ${
               wordPiece.isPlaced
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-white border-2 border-gray-300 hover:border-green-400 text-gray-800'
