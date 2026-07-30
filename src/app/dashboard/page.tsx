@@ -10,6 +10,7 @@ import ActivityForm from '@/components/ActivityForm'
 import ReportsQueue from '@/components/ReportsQueue'
 import MemorizationForm from '@/components/MemorizationForm'
 import Leaderboard from '@/components/Leaderboard'
+import PodiumLeaderboard from '@/components/PodiumLeaderboard'
 import SettingsModal from '@/components/SettingsModal'
 
 interface User {
@@ -229,10 +230,48 @@ export default function DashboardPage() {
 function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, reports: Report[], onReportSubmitted: () => void }) {
   const [showForm, setShowForm] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
+  const [showPodium, setShowPodium] = useState(false)
+  const [students, setStudents] = useState<any[]>([])
+
+  // Listen for leaderboard trigger from teacher
+  useEffect(() => {
+    const triggerRef = doc(db, 'settings', 'leaderboardTrigger')
+    const unsubscribe = onSnapshot(triggerRef, async (doc) => {
+      const data = doc.data()
+      if (data && data.triggered) {
+        // Fetch students data
+        try {
+          const res = await fetch('/api/users?role=STUDENT&sortBy=stars')
+          const studentData = await res.json()
+          setStudents(studentData.users || [])
+          setShowPodium(true)
+        } catch (error) {
+          console.error('Failed to fetch students for podium:', error)
+        }
+      } else {
+        setShowPodium(false)
+      }
+    }, (error) => {
+      console.error('Error listening to leaderboard trigger:', error)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const pendingReports = reports.filter(r => r.status === 'PENDING')
   const approvedReports = reports.filter(r => r.status === 'APPROVED')
   const rejectedReports = reports.filter(r => r.status === 'REJECTED')
+
+  // Show podium when triggered by teacher
+  if (showPodium) {
+    return (
+      <PodiumLeaderboard
+        students={students}
+        onClose={() => setShowPodium(false)}
+        isTeacher={false}
+      />
+    )
+  }
 
   if (showForm && selectedActivity) {
     return (
@@ -352,6 +391,44 @@ function StudentDashboard({ user, reports, onReportSubmitted }: { user: User, re
 function TeacherDashboard() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'reports' | 'memorization' | 'leaderboard'>('reports')
+  const [showPodium, setShowPodium] = useState(false)
+  const [students, setStudents] = useState<any[]>([])
+
+  const handleShowPodium = async () => {
+    try {
+      // Fetch students data
+      const res = await fetch('/api/users?role=STUDENT&sortBy=stars')
+      const data = await res.json()
+      setStudents(data.users || [])
+
+      // Trigger the leaderboard animation for students (without blocking)
+      fetch('/api/leaderboard/trigger', { method: 'POST' }).catch(err => {
+        console.error('Failed to trigger leaderboard:', err)
+      })
+
+      setShowPodium(true)
+    } catch (error) {
+      console.error('Failed to show podium:', error)
+    }
+  }
+
+  const handleClosePodium = () => {
+    setShowPodium(false)
+    // Reset the trigger (without blocking)
+    fetch('/api/leaderboard/trigger', { method: 'DELETE' }).catch(err => {
+      console.error('Failed to reset leaderboard trigger:', err)
+    })
+  }
+
+  if (showPodium) {
+    return (
+      <PodiumLeaderboard
+        students={students}
+        onClose={handleClosePodium}
+        isTeacher={true}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -394,8 +471,15 @@ function TeacherDashboard() {
       {activeTab === 'leaderboard' && <Leaderboard />}
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm p-4">
+      <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
         <h3 className="font-bold text-gray-800 mb-3">Aksi Cepat</h3>
+        <button
+          onClick={handleShowPodium}
+          className="w-full py-3 px-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-lg font-semibold hover:from-yellow-600 hover:to-amber-700 transition flex items-center justify-center gap-2"
+        >
+          <Star className="w-5 h-5" />
+          Tunjukkan Peringkat Akhir
+        </button>
         <button
           onClick={() => router.push('/students')}
           className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2"
