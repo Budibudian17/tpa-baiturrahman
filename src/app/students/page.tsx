@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Star, ChevronUp, ChevronDown, Settings, Trash2 } from 'lucide-react'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface User {
   id: string
@@ -24,6 +25,11 @@ export default function StudentsPage() {
   const [editingName, setEditingName] = useState<string | null>(null)
   const [editNameValue, setEditNameValue] = useState('')
   const [updatingStars, setUpdatingStars] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ userId: string; studentName: string } | null>(null)
+  const [deleteSecondConfirm, setDeleteSecondConfirm] = useState<{ userId: string; studentName: string } | null>(null)
+  const [showAlert, setShowAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning'>('success')
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -107,25 +113,42 @@ export default function StudentsPage() {
     }
   }
 
-  const handleDeleteStudent = async (userId: string, studentName: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus akun murid "${studentName}"? Tindakan ini tidak dapat dibatalkan.`)) {
-      if (confirm(`KONFIRMASI: Anda akan menghapus "${studentName}" secara permanen. Lanjutkan?`)) {
-        try {
-          const res = await fetch('/api/users/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId })
-          })
-          const data = await res.json()
-          if (data.success) {
-            alert('Akun murid berhasil dihapus!')
-          } else {
-            alert('Gagal menghapus akun murid: ' + data.error)
-          }
-        } catch (error) {
-          console.error('Failed to delete student:', error)
-          alert('Terjadi kesalahan. Silakan coba lagi.')
+  const handleDeleteStudent = (userId: string, studentName: string) => {
+    setDeleteConfirm({ userId, studentName })
+  }
+
+  const confirmDeleteFirst = () => {
+    if (deleteConfirm) {
+      setDeleteSecondConfirm(deleteConfirm)
+      setDeleteConfirm(null)
+    }
+  }
+
+  const confirmDeleteSecond = async () => {
+    if (deleteSecondConfirm) {
+      const { userId, studentName } = deleteSecondConfirm
+      setDeleteSecondConfirm(null)
+      try {
+        const res = await fetch('/api/users/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        })
+        const data = await res.json()
+        if (data.success) {
+          setAlertMessage('Akun murid berhasil dihapus!')
+          setAlertType('success')
+          setShowAlert(true)
+        } else {
+          setAlertMessage('Gagal menghapus akun murid: ' + data.error)
+          setAlertType('error')
+          setShowAlert(true)
         }
+      } catch (error) {
+        console.error('Failed to delete student:', error)
+        setAlertMessage('Terjadi kesalahan. Silakan coba lagi.')
+        setAlertType('error')
+        setShowAlert(true)
       }
     }
   }
@@ -290,6 +313,40 @@ export default function StudentsPage() {
           )}
         </div>
       </div>
+
+      {/* Custom Modals */}
+      <ConfirmModal
+        isOpen={deleteConfirm !== null}
+        title="Hapus Akun Murid"
+        message={`Apakah Anda yakin ingin menghapus akun murid "${deleteConfirm?.studentName}"? Tindakan ini tidak dapat dibatalkan.`}
+        type="danger"
+        onConfirm={confirmDeleteFirst}
+        onCancel={() => setDeleteConfirm(null)}
+        confirmText="Ya"
+        cancelText="Batal"
+      />
+
+      <ConfirmModal
+        isOpen={deleteSecondConfirm !== null}
+        title="Konfirmasi Hapus"
+        message={`KONFIRMASI: Anda akan menghapus "${deleteSecondConfirm?.studentName}" secara permanen. Lanjutkan?`}
+        type="danger"
+        onConfirm={confirmDeleteSecond}
+        onCancel={() => setDeleteSecondConfirm(null)}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+      />
+
+      <ConfirmModal
+        isOpen={showAlert}
+        title={alertType === 'success' ? 'Berhasil' : 'Error'}
+        message={alertMessage}
+        type={alertType === 'success' ? 'success' : 'danger'}
+        onConfirm={() => setShowAlert(false)}
+        onCancel={() => setShowAlert(false)}
+        confirmText="OK"
+        cancelText=""
+      />
     </div>
   )
 }

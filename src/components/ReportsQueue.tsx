@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Check, X, Edit2, Trash2, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, X, ZoomIn, ChevronUp, ChevronDown, Check, Trash2 } from 'lucide-react'
+import ConfirmModal from '@/components/ConfirmModal'
 import { collection, query, orderBy, onSnapshot, getDoc, doc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
@@ -35,6 +36,7 @@ export default function ReportsQueue() {
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING')
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set())
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   useEffect(() => {
     const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'))
@@ -141,12 +143,17 @@ export default function ReportsQueue() {
     }
   }
 
-  const handleDelete = async (reportId: string) => {
-    if (!confirm('Yakin ingin menghapus laporan ini?')) return
+  const handleDelete = (reportId: string) => {
+    setDeleteConfirm(reportId)
+  }
 
-    setProcessingId(reportId)
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return
+
+    setProcessingId(deleteConfirm)
+    setDeleteConfirm(null)
     try {
-      const res = await fetch(`/api/reports/${reportId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/reports/${deleteConfirm}`, { method: 'DELETE' })
       if (!res.ok) {
         console.error('Failed to delete report')
       }
@@ -365,7 +372,7 @@ export default function ReportsQueue() {
 
       {/* Lightbox Modal */}
       {lightboxPhoto && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={closeLightbox}
         >
@@ -385,6 +392,18 @@ export default function ReportsQueue() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm !== null}
+        title="Hapus Laporan"
+        message="Yakin ingin menghapus laporan ini?"
+        type="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm(null)}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Trophy, Medal, Award, Crown, X } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface Student {
   id: string
@@ -25,26 +26,39 @@ export default function PodiumLeaderboard({ students, onClose, isTeacher = false
   const [showFirst, setShowFirst] = useState(false)
   const [showWinnerName, setShowWinnerName] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning'>('success')
 
   const handleResetStars = () => {
-    if (confirm('Apakah Anda yakin ingin mereset semua bintang siswa? Tindakan ini tidak dapat dibatalkan.')) {
-      // Call API to reset all stars
-      fetch('/api/users/reset-stars', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            alert('Semua bintang berhasil direset!')
-            // Refresh the leaderboard
-            window.location.reload()
-          } else {
-            alert('Gagal mereset bintang. Silakan coba lagi.')
-          }
-        })
-        .catch(err => {
-          console.error('Error resetting stars:', err)
-          alert('Terjadi kesalahan. Silakan coba lagi.')
-        })
-    }
+    setShowResetConfirm(true)
+  }
+
+  const confirmResetStars = () => {
+    setShowResetConfirm(false)
+    // Call API to reset all stars
+    fetch('/api/users/reset-stars', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setAlertMessage('Semua bintang berhasil direset!')
+          setAlertType('success')
+          setShowAlert(true)
+          // Refresh the leaderboard
+          window.location.reload()
+        } else {
+          setAlertMessage('Gagal mereset bintang. Silakan coba lagi.')
+          setAlertType('error')
+          setShowAlert(true)
+        }
+      })
+      .catch(err => {
+        console.error('Error resetting stars:', err)
+        setAlertMessage('Terjadi kesalahan. Silakan coba lagi.')
+        setAlertType('error')
+        setShowAlert(true)
+      })
   }
 
   useEffect(() => {
@@ -433,11 +447,33 @@ export default function PodiumLeaderboard({ students, onClose, isTeacher = false
             onClick={handleResetStars}
             className="w-full py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
           >
-            <X className="w-5 h-5" />
             Reset Semua Bintang
           </button>
         </div>
       )}
+
+      {/* Custom Modals */}
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        title="Reset Semua Bintang"
+        message="Apakah Anda yakin ingin mereset semua bintang siswa? Tindakan ini tidak dapat dibatalkan."
+        type="danger"
+        onConfirm={confirmResetStars}
+        onCancel={() => setShowResetConfirm(false)}
+        confirmText="Ya, Reset"
+        cancelText="Batal"
+      />
+
+      <ConfirmModal
+        isOpen={showAlert}
+        title={alertType === 'success' ? 'Berhasil' : 'Error'}
+        message={alertMessage}
+        type={alertType === 'success' ? 'success' : 'danger'}
+        onConfirm={() => setShowAlert(false)}
+        onCancel={() => setShowAlert(false)}
+        confirmText="OK"
+        cancelText=""
+      />
     </div>
   )
 }

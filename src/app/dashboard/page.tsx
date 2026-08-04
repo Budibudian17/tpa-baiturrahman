@@ -12,6 +12,7 @@ import MemorizationForm from '@/components/MemorizationForm'
 import Leaderboard from '@/components/Leaderboard'
 import PodiumLeaderboard from '@/components/PodiumLeaderboard'
 import SettingsModal from '@/components/SettingsModal'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface User {
   id: string
@@ -393,8 +394,14 @@ function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState<'reports' | 'memorization' | 'leaderboard'>('reports')
   const [showPodium, setShowPodium] = useState(false)
   const [students, setStudents] = useState<any[]>([])
+  const [showPodiumConfirm, setShowPodiumConfirm] = useState(false)
 
-  const handleShowPodium = async () => {
+  const handleShowPodium = () => {
+    setShowPodiumConfirm(true)
+  }
+
+  const confirmShowPodium = async () => {
+    setShowPodiumConfirm(false)
     try {
       // Fetch students data
       const res = await fetch('/api/users?role=STUDENT&sortBy=stars')
@@ -488,6 +495,18 @@ function TeacherDashboard() {
           Kelola Siswa
         </button>
       </div>
+
+      {/* Podium Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showPodiumConfirm}
+        title="Tunjukkan Peringkat Akhir"
+        message="Apakah Anda yakin ingin menampilkan peringkat akhir ke semua murid? Ini akan memunculkan animasi podium di semua device murid."
+        type="warning"
+        onConfirm={confirmShowPodium}
+        onCancel={() => setShowPodiumConfirm(false)}
+        confirmText="Ya, Tampilkan"
+        cancelText="Batal"
+      />
     </div>
   )
 }
