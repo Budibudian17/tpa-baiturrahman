@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Star, ChevronUp, ChevronDown, Settings } from 'lucide-react'
+import { ArrowLeft, Star, ChevronUp, ChevronDown, Settings, Trash2 } from 'lucide-react'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
@@ -103,6 +103,29 @@ export default function StudentsPage() {
   const saveEditName = (userId: string) => {
     if (editNameValue.trim()) {
       handleUpdateName(userId, editNameValue.trim())
+    }
+  }
+
+  const handleDeleteStudent = async (userId: string, studentName: string) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus akun murid "${studentName}"? Tindakan ini tidak dapat dibatalkan.`)) {
+      if (confirm(`KONFIRMASI: Anda akan menghapus "${studentName}" secara permanen. Lanjutkan?`)) {
+        try {
+          const res = await fetch('/api/users/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+          })
+          const data = await res.json()
+          if (data.success) {
+            alert('Akun murid berhasil dihapus!')
+          } else {
+            alert('Gagal menghapus akun murid: ' + data.error)
+          }
+        } catch (error) {
+          console.error('Failed to delete student:', error)
+          alert('Terjadi kesalahan. Silakan coba lagi.')
+        }
+      }
     }
   }
 
@@ -210,6 +233,13 @@ export default function StudentsPage() {
                       title="Edit Nama"
                     >
                       <Settings className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteStudent(student.id, student.name)}
+                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Hapus Akun"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                     <div className="flex items-center gap-2">
                       <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
