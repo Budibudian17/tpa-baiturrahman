@@ -202,8 +202,8 @@ export default function StudentsPage() {
           ) : (
             filteredStudents.map(student => (
               <div key={student.id} className="bg-white rounded-xl shadow-sm p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
                     {student.photoUrl ? (
                       <img
                         src={student.photoUrl}
@@ -217,12 +217,12 @@ export default function StudentsPage() {
                     )}
                     <div className="flex-1 min-w-0">
                       {editingName === student.id ? (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <input
                             type="text"
                             value={editNameValue}
                             onChange={(e) => setEditNameValue(e.target.value)}
-                            className="flex-1 px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="flex-1 min-w-[120px] px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                             autoFocus
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') saveEditName(student.id)
@@ -253,21 +253,23 @@ export default function StudentsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <button
-                      onClick={() => startEditName(student)}
-                      className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
-                      title="Edit Nama"
-                    >
-                      <Settings className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteStudent(student.id, student.name)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Hapus Akun"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => startEditName(student)}
+                        className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                        title="Edit Nama"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id, student.name)}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Hapus Akun"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2">
                       <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                       <div className="flex items-center gap-1">
@@ -286,7 +288,7 @@ export default function StudentsPage() {
                             <ChevronDown className="w-4 h-4 text-gray-600" />
                           )}
                         </button>
-                        <span className="w-16 text-center font-bold text-gray-800">
+                        <span className="w-12 text-center font-bold text-gray-800 text-sm">
                           {student.stars % 1 === 0 ? student.stars : student.stars.toFixed(1)}
                         </span>
                         <button
