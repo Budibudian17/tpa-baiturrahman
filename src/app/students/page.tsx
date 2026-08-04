@@ -13,6 +13,7 @@ interface User {
   role: string
   stars: number
   photoUrl?: string
+  email?: string
 }
 
 export default function StudentsPage() {
@@ -222,6 +223,9 @@ export default function StudentsPage() {
                         <div>
                           <p className="font-semibold text-gray-800 truncate">{student.name}</p>
                           <p className="text-sm text-gray-500">@{student.username}</p>
+                          {student.email && (
+                            <p className="text-xs text-gray-400 truncate">{student.email}</p>
+                          )}
                         </div>
                       )}
                     </div>
