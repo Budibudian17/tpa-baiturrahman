@@ -23,10 +23,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const triggerRef = doc(db, 'settings', 'leaderboardTrigger')
-    await setDoc(triggerRef, {
-      triggered: false,
-      timestamp: Date.now()
-    })
+    await deleteDoc(triggerRef)
 
     return NextResponse.json({ success: true })
   } catch (error) {
