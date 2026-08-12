@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { sendPasswordResetEmail } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -18,22 +20,10 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Gagal mengirim email reset password')
-        return
-      }
-
+      await sendPasswordResetEmail(auth, email)
       setMessage('Link reset password telah dikirim ke email Anda. Silakan cek inbox.')
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.')
+    } catch (err: any) {
+      setError('Gagal mengirim email reset password. Pastikan email terdaftar.')
     } finally {
       setLoading(false)
     }
