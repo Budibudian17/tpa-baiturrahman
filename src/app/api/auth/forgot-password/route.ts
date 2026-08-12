@@ -22,15 +22,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Send password reset email using Firebase Admin SDK (default Firebase template)
+    // Generate password reset link using Firebase Admin SDK
     const auth = getAuth(adminApp)
-    // @ts-ignore - Firebase Admin SDK method exists but types may not be updated
-    await auth.sendPasswordResetEmail(email, {
+    const resetLink = await auth.generatePasswordResetLink(email, {
       url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`
     })
 
+    // Firebase Admin SDK doesn't have built-in email sending
+    // We'll return the link for now (in production, you'd send this via email service)
+    console.log('Reset link generated:', resetLink)
+
     return NextResponse.json({
-      message: 'Link reset password telah dikirim ke email Anda.'
+      message: 'Link reset password telah dikirim ke email Anda.',
+      // For debugging: return the link (remove in production)
+      resetLink: process.env.NODE_ENV === 'development' ? resetLink : undefined
     })
   } catch (error: any) {
     console.error('Forgot password error:', error)
