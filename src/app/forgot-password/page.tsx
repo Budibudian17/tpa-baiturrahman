@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { sendPasswordResetEmail } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -20,19 +18,22 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      // Use Firebase Client SDK directly - this will send the default Firebase email
-      await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin}/reset-password`
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
       })
 
-      setMessage('Link reset password telah dikirim ke email Anda. Silakan cek inbox.')
-    } catch (err: any) {
-      console.error('Forgot password error:', err)
-      if (err.code === 'auth/user-not-found') {
-        setMessage('Jika email terdaftar, link reset password akan dikirim.')
-      } else {
-        setError('Terjadi kesalahan. Silakan coba lagi.')
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Gagal mengirim email reset password')
+        return
       }
+
+      setMessage('Link reset password telah dikirim ke email Anda. Silakan cek inbox.')
+    } catch (err) {
+      setError('Terjadi kesalahan. Silakan coba lagi.')
     } finally {
       setLoading(false)
     }

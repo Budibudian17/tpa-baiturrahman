@@ -10,11 +10,7 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now()
     })
 
-    return NextResponse.json({ success: true }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate'
-      }
-    })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to trigger leaderboard:', error)
     return NextResponse.json(
@@ -29,11 +25,7 @@ export async function DELETE(request: NextRequest) {
     const triggerRef = doc(db, 'settings', 'leaderboardTrigger')
     await deleteDoc(triggerRef)
 
-    return NextResponse.json({ success: true }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate'
-      }
-    })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to reset leaderboard trigger:', error)
     return NextResponse.json(

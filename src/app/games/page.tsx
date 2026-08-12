@@ -3,8 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Gamepad2, BookOpen, Brain, Mic } from 'lucide-react'
 
-// ISR: Revalidate every 1 hour (3600 seconds)
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default function GamesPage() {
   const router = useRouter()

@@ -77,12 +77,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { message: 'Memorization recorded successfully', stars: finalStars },
-      {
-        status: 201,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate'
-        }
-      }
+      { status: 201 }
     )
   } catch (error) {
     console.error('Failed to create memorization:', error)

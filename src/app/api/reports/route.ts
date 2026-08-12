@@ -107,12 +107,7 @@ export async function GET(request: NextRequest) {
     })
 
     console.log('Returning reports:', reports.length)
-    // Cache for 30 seconds, stale-while-revalidate for 120 seconds
-    return NextResponse.json({ reports }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120'
-      }
-    })
+    return NextResponse.json({ reports })
   } catch (error) {
     console.error('Failed to fetch reports:', error)
     console.error('Error details:', JSON.stringify(error, null, 2))
@@ -153,12 +148,7 @@ export async function POST(request: NextRequest) {
 
     const docRef = await addDoc(collection(db, 'reports'), reportData)
 
-    return NextResponse.json({ report: { id: docRef.id, ...reportData } }, {
-      status: 201,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate'
-      }
-    })
+    return NextResponse.json({ report: { id: docRef.id, ...reportData } }, { status: 201 })
   } catch (error) {
     console.error('Failed to create report:', error)
     return NextResponse.json(

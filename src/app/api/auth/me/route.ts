@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
 
     console.log('User data from Firestore:', userData)
 
-    // Cache for 60 seconds, stale-while-revalidate for 300 seconds
     return NextResponse.json({
       id: userDoc.id,
       name: userData.name,
@@ -52,10 +51,6 @@ export async function GET(request: NextRequest) {
       role: userData.role,
       stars: userData.stars,
       photoUrl: userData.photoUrl || null
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
-      }
     })
   } catch (error) {
     console.error('Failed to fetch current user:', error)
