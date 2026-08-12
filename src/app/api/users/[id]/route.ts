@@ -18,6 +18,7 @@ export async function GET(
     }
 
     const userData = userDoc.data() as any
+    // Cache for 60 seconds, stale-while-revalidate for 300 seconds
     return NextResponse.json({
       id: userDoc.id,
       name: userData.name,
@@ -25,6 +26,10 @@ export async function GET(
       role: userData.role,
       stars: userData.stars,
       photoUrl: userData.photoUrl || null
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
     })
   } catch (error) {
     console.error('Failed to fetch user:', error)
@@ -53,7 +58,11 @@ export async function PATCH(
 
     await updateDoc(doc(db, 'users', id), { stars })
 
-    return NextResponse.json({ success: true, stars })
+    return NextResponse.json({ success: true, stars }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Failed to update user stars:', error)
     return NextResponse.json(

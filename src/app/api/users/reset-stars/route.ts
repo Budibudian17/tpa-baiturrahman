@@ -25,8 +25,12 @@ export async function POST(request: NextRequest) {
     }
     
     await batch.commit()
-    
-    return NextResponse.json({ success: true, message: `Reset ${count} students' stars` })
+
+    return NextResponse.json({ success: true, message: `Reset ${count} students' stars` }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Failed to reset stars:', error)
     return NextResponse.json(

@@ -47,7 +47,11 @@ export async function POST(request: NextRequest) {
 
     // Only store minimal data in cookie to avoid size limit
     const sessionData = { id: user.uid }
-    const response = NextResponse.json({ user: responseUser })
+    const response = NextResponse.json({ user: responseUser }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    })
     response.cookies.set('session', JSON.stringify(sessionData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -58,14 +62,14 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error: any) {
     console.error('Login error:', error)
-    
+
     if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
       return NextResponse.json(
         { error: 'Invalid username/email or password' },
         { status: 401 }
       )
     }
-    
+
     return NextResponse.json(
       { error: 'An error occurred during login' },
       { status: 500 }

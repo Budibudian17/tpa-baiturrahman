@@ -40,7 +40,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ users })
+    // Cache for 60 seconds, stale-while-revalidate for 300 seconds
+    return NextResponse.json({ users }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
+    })
   } catch (error) {
     console.error('Failed to fetch users:', error)
     return NextResponse.json(
@@ -107,7 +112,12 @@ export async function PATCH(request: NextRequest) {
     // Keep session as just ID (no need to update it)
     const response = NextResponse.json(
       { message: 'Profile updated successfully', name, photoUrl: photoUrl || userData.photoUrl },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate'
+        }
+      }
     )
 
     return response

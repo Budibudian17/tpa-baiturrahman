@@ -40,7 +40,11 @@ export async function DELETE(
       await deleteDoc(reportRef)
     }
 
-    return NextResponse.json({ message: 'Report deleted successfully' })
+    return NextResponse.json({ message: 'Report deleted successfully' }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Failed to delete report:', error)
     return NextResponse.json(

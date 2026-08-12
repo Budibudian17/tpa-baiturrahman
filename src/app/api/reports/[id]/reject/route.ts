@@ -33,7 +33,11 @@ export async function POST(
       rejectionReason: reason || null
     })
 
-    return NextResponse.json({ message: 'Report rejected successfully' })
+    return NextResponse.json({ message: 'Report rejected successfully' }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Failed to reject report:', error)
     return NextResponse.json(

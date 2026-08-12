@@ -50,7 +50,11 @@ export async function POST(
     })
 
     console.log('Report approved successfully')
-    return NextResponse.json({ message: 'Report approved successfully' })
+    return NextResponse.json({ message: 'Report approved successfully' }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Failed to approve report:', error)
     console.error('Error details:', JSON.stringify(error, null, 2))

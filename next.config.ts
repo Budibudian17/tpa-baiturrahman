@@ -4,7 +4,9 @@ import withPWA from "next-pwa";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
-    unoptimized: true,
+    // Enable Next.js Image Optimization for better bandwidth usage
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
   },
   // Allow loading images from public folder
   experimental: {
